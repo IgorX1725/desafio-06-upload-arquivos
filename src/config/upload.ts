@@ -1,7 +1,9 @@
 import multer, { Options } from 'multer';
 import path from 'path';
+import crypto from 'crypto';
 
 const tempFolder = path.resolve(__dirname, '..', '..', 'tmp');
+const randomFileName = crypto.randomBytes(10).toString('hex');
 const options: Options = {
   fileFilter(request, file, callback) {
     if (file.mimetype !== 'text/csv') {
@@ -14,7 +16,7 @@ const options: Options = {
   storage: multer.diskStorage({
     destination: tempFolder,
     filename(request, file, callback) {
-      const fileName = `svgPayload${path.extname(file.originalname)}`;
+      const fileName = `${randomFileName}${path.extname(file.originalname)}`;
       return callback(null, fileName);
     },
   }),

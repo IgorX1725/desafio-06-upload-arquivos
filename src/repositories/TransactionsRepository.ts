@@ -1,3 +1,4 @@
+/* eslint no-param-reassign: "error" */
 import { EntityRepository, Repository } from 'typeorm';
 
 import Transaction from '../models/Transaction';
@@ -11,18 +12,27 @@ interface Balance {
 @EntityRepository(Transaction)
 class TransactionsRepository extends Repository<Transaction> {
   public async getBalance(): Promise<Balance> {
-    const income = await this.createQueryBuilder('transactions')
-      .select('SUM(transactions.value)', 'sum')
-      .where(`transactions.type = 'income'`)
-      .getRawOne()
-      .then(result => (result.sum == null ? 0 : parseInt(result.sum, 10)));
-    const outcome = await this.createQueryBuilder('transactions')
-      .select('SUM(transactions.value)', 'sum')
-      .where(`transactions.type = 'outcome'`)
-      .getRawOne()
-      .then(result => (result.sum == null ? 0 : parseInt(result.sum, 10)));
+    const allTransactions = await this.find();
+
+    const { income, outcome } = allTransactions.reduce(
+      (acumulator, currentTransaction) => {
+        switch (currentTransaction.type) {
+          case 'income':
+            acumulator.income += currentTransaction.value;
+            break;
+          case 'outcome':
+            acumulator.outcome += currentTransaction.value;
+            break;
+          default:
+            break;
+        }
+        return acumulator;
+      },
+      { income: 0, outcome: 0, total: 0 },
+    );
 
     const total = income - outcome;
+
     return { income, outcome, total };
   }
 }

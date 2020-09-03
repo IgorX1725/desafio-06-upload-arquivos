@@ -46,7 +46,6 @@ class ImportTransactionsService {
     });
 
     await new Promise(resolve => parseCSV.on('end', resolve));
-    console.log();
 
     const existentCategories = await categoryRepository.find({
       where: {
@@ -79,10 +78,10 @@ class ImportTransactionsService {
         category => category.title === transaction.category,
       ),
     }));
-    // console.log(transactionsToCreate);
 
     const newTransactions = transactionRepository.create(transactionsToCreate);
     await transactionRepository.save(newTransactions);
+    fs.unlinkSync(csvFilePath);
     return newTransactions;
   }
 }
